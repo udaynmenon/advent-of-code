@@ -1,3 +1,5 @@
+# Link to puzzle: https://adventofcode.com/2025/day/4
+
 from typing import List, Tuple, Final
 from pathlib import Path
 
