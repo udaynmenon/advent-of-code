@@ -1,9 +1,17 @@
-from typing import List
+# Link to puzzle: https://adventofcode.com/2025/day/1
+
+from typing import List, Final
 from pathlib import Path
 from dataclasses import dataclass
 
+# --- Configuration & Constants ---
 PROJECT_DIR = Path(__file__).parent
-SOURCE = PROJECT_DIR / "./input.txt"
+SOURCE = PROJECT_DIR / "input.txt"
+
+START_POSITION: Final[int] = 50
+DIAL_SIZE: Final[int] = 100
+DIRECTION_LEFT: Final[str] = "L"
+DIRECTION_RIGHT: Final[str] = "R"
 
 
 @dataclass
@@ -12,77 +20,88 @@ class Rotation:
     value: int
 
 
-# Reading turns from file
-def read_rotations(file_path: Path) -> List[Rotation]:
-    rotations = list()
-    with open(file_path, "r") as file:
+def parse_rotations(file_path: Path) -> List[Rotation]:
+    """
+    Parses the input file into a list of Rotation objects
+    """
+    rotations = []
+
+    with open(file_path, "r", encoding="utf-8") as file:
         for line in file:
-            clean_line = line.rstrip("\n")
-            rotations.append(Rotation(clean_line[0], int(clean_line[1:])))
+            clean_line = line.strip()
+            if not clean_line:
+                continue
+
+            direction = clean_line[0]
+            value = int(clean_line[1:])
+            rotations.append(Rotation(direction, value))
+
     return rotations
 
 
-# Computing new position
-def rotate(position: int, rotation: Rotation) -> int:
-    if rotation.direction == "L":
-        new_position = position - rotation.value
-    else:
-        new_position = position + rotation.value
+def solve_part_one(start_pos: int, rotations: List[Rotation]) -> int:
+    """
+    Counts how many times the dial stops exactly at 0
+    """
+    current_pos = start_pos
+    zero_hits = 0
 
-    return new_position
-
-
-def password_basic(current_position: int, rotations: List[Rotation]) -> int:
-    password = 0
-
-    for rotation in rotations:
-        position = rotate(current_position, rotation)
-        current_position = position % 100
-        print(
-            f"Rotation: {rotation.direction} {rotation.value} | New position: {current_position}"
-        )
-        if current_position == 0:
-            password += 1
-
-    return password
-
-
-def password_advanced(start_position: int, rotations: List[Rotation]) -> int:
-    current = start_position
-    total_zeroes_crossed = 0
-
-    for rotation in rotations:
-        if rotation.direction == "L":
-            absolute_position = current - rotation.value
-            zeroes_crossed = (current - 1) // 100 - (absolute_position - 1) // 100
+    for rot in rotations:
+        if rot.direction == DIRECTION_LEFT:
+            current_pos -= rot.value
         else:
-            absolute_position = current + rotation.value
-            zeroes_crossed = absolute_position // 100 - current // 100
+            current_pos += rot.value
 
-        print(
-            f"{rotation.direction}{rotation.value}: {current} -> {absolute_position} | Zeroes crossed: {zeroes_crossed}"
-        )
-        total_zeroes_crossed += zeroes_crossed
-        current = absolute_position
+        # Normalise to circular dial
+        current_pos %= DIAL_SIZE
 
-    return total_zeroes_crossed
+        if current_pos == 0:
+            zero_hits += 1
+
+    return zero_hits
 
 
-# --- Execution ---
-rotations = read_rotations(SOURCE)
-current_position = 50
+def solve_part_two(start_pos: int, rotations: List[Rotation]) -> int:
+    """
+    Counts how many times the dial PASSES or LANDS on 0
+    """
+    current_abs = start_pos
+    total_crossings = 0
 
-# ---------------------------------------------------------------------------- #
-#                                    Result                                    #
-# ---------------------------------------------------------------------------- #
+    for rotation in rotations:
+        prev_abs = current_abs
 
-print(f"Starting at: {current_position}")
+        # Left rotation
+        if rotation.direction == DIRECTION_LEFT:
+            current_abs -= rotation.value
+            # Count multiples of 100 in range (new_abs, current_abs)
+            crossings = (prev_abs - 1) // DIAL_SIZE - (current_abs - 1) // DIAL_SIZE
 
-print(
-    "# ----------------------------------- BASIC ---------------------------------- #"
-)
-print(f"Password Basic: {password_basic(current_position, rotations)}")
-print(
-    "# --------------------------------- ADVANCED --------------------------------- #"
-)
-print(f"Password Advanced: {password_advanced(current_position, rotations)}")
+        # Right rotation
+        else:
+            current_abs += rotation.value
+            # Count multiples of 100 in range (current_abs, new_abs)
+            crossings = current_abs // DIAL_SIZE - prev_abs // DIAL_SIZE
+
+        total_crossings += crossings
+
+    return total_crossings
+
+
+def main():
+    """
+    Orchestrates the solution.
+    """
+    rotations = parse_rotations(SOURCE)
+    if not rotations:
+        return
+
+    # Part 1
+    print(f"Solution 1: {solve_part_one(START_POSITION, rotations)}")
+
+    # Part 2
+    print(f"Solution 2: {solve_part_two(START_POSITION, rotations)}")
+
+
+if __name__ == "__main__":
+    main()
