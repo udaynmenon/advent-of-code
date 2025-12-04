@@ -5,7 +5,7 @@ from pathlib import Path
 
 # Configuration and contants
 PROJECT_DIR = Path(__file__).parent
-SOURCE = PROJECT_DIR / "./input.txt"
+SOURCE = PROJECT_DIR / "input.txt"
 
 CHAR_PAPER: Final[str] = "@"
 VAL_PAPER: Final[int] = 1
