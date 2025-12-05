@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 # --- Configuration & Constants ---
 PROJECT_DIR = Path(__file__).parent
-INPUT_FILE = PROJECT_DIR / "input.txt"
+SOURCE = PROJECT_DIR / "input.txt"
 
 # Regex to find IDs consisting of a sequence repeated one or more times
 RE_REPETITIVE = re.compile(r"^(\d+)\1+$")
@@ -83,7 +83,7 @@ def main():
     """
     Orchestrates the solution.
     """
-    id_ranges = parse_id_ranges(INPUT_FILE)
+    id_ranges = parse_id_ranges(SOURCE)
 
     if not id_ranges:
         return
